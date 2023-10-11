@@ -106,6 +106,9 @@ require('lazy').setup({
 
       -- Adds a number of user-friendly snippets
       'rafamadriz/friendly-snippets',
+
+      -- Completion for the cmdline
+      'hrsh7th/cmp-cmdline'
     },
   },
 
@@ -124,8 +127,6 @@ require('lazy').setup({
         changedelete = { text = '~' },
       },
       on_attach = function(bufnr)
-        vim.keymap.set('n', '<leader>gh', require('gitsigns').preview_hunk, { buffer = bufnr, desc = 'Preview git hunk' })
-
         -- don't override the built-in and fugitive keymaps
         local gs = package.loaded.gitsigns
         vim.keymap.set({ 'n', 'v' }, ']c', function()
@@ -181,7 +182,7 @@ require('lazy').setup({
   { 'numToStr/Comment.nvim',         opts = {} },
 
   -- autoformat on save
-  { 'lukas-reineke/lsp-format.nvim', opts = { sync = true } },
+  { 'lukas-reineke/lsp-format.nvim', opts = { sync = true }, enabled = false },
 
   -- Fuzzy Finder (files, lsp, etc)
   {
@@ -223,11 +224,11 @@ require('lazy').setup({
     },
     keys = {
       {
-        "<leader>t",
+        "<leader>n",
         function()
           require("neo-tree.command").execute({ toggle = true, dir = vim.loop.cwd() })
         end,
-        desc = "Explorer Neo[T]ree (cwd)",
+        desc = "Explorer [n]eotree (cwd)",
       },
     },
     deactivate = function()
@@ -299,17 +300,16 @@ require('lazy').setup({
       }
     },
     {
-      "folke/flash.nvim",
-      event = "VeryLazy",
-      ---@type Flash.Config
-      opts = {
-        modes = {
-          char = {
-            highlight = { backdrop = false }
-          }
-        }
-      }
-    }
+      'gbprod/substitute.nvim',
+      opts = { highlight_substituted_text = { timer = 150 } },
+      config = function(_, opts) require('substitute').setup(opts) end,
+    },
+    { 'akinsho/toggleterm.nvim', version = "*", opts = { --[[ things you want to change go here]] } },
+    {
+      'Pocco81/auto-save.nvim',
+      opts = { execution_message = { message = function() return ("") end } },
+      config = function(_, opts) require('auto-save').setup(opts) end
+    },
   },
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
@@ -333,15 +333,21 @@ require('lazy').setup({
 -- Set highlight on search
 vim.o.hlsearch = false
 
--- Make line numbers default
-vim.wo.number = true
-vim.wo.relativenumber = true
-
 -- Enable mouse mode
 vim.o.mouse = 'a'
 -- Show whitespaces
 vim.wo.list = true
 
+-- Highlight current line
+vim.wo.cursorline = true
+-- Indentation size
+vim.o.expandtab = true
+vim.o.tabstop = 4
+vim.o.shiftwidth = 4
+
+-- Make line numbers default
+vim.wo.number = true
+vim.wo.relativenumber = true
 -- Sync clipboard between OS and Neovim.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
@@ -417,6 +423,9 @@ require('telescope').setup {
 -- Enable telescope fzf native, if installed
 pcall(require('telescope').load_extension, 'fzf')
 
+-- Enable toggleterm
+require("toggleterm").setup {}
+
 -- See `:help telescope.builtin`
 vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { desc = '[?] Find recently opened files' })
 vim.keymap.set('n', '<leader><space>', require('telescope.builtin').buffers, { desc = '[ ] Find existing buffers' })
@@ -438,23 +447,38 @@ vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { de
 vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = '[S]earch [R]esume' })
 
 -- Harpoon hotkeys
-vim.keymap.set("n", "<leader>a", require("harpoon.mark").add_file, { desc = 'Add to [H]arpoon' })
+vim.keymap.set("n", "<leader>a", require("harpoon.mark").add_file, { desc = '[a]dd to Harpoon' })
 vim.keymap.set("n", "<C-e>", require("harpoon.ui").toggle_quick_menu, { desc = 'Harpoon UI' })
 
-vim.keymap.set("n", "¡", function() require("harpoon.ui").nav_file(1) end, { desc = '1st harpoon file' })
-vim.keymap.set("n", "™", function() require("harpoon.ui").nav_file(2) end, { desc = '2st harpoon file' })
-vim.keymap.set("n", "£", function() require("harpoon.ui").nav_file(3) end, { desc = '3st harpoon file' })
-vim.keymap.set("n", "¢", function() require("harpoon.ui").nav_file(4) end, { desc = '4st harpoon file' })
+vim.keymap.set("n", "å", function() require("harpoon.ui").nav_file(1) end, { desc = '1st harpoon file' })
+vim.keymap.set("n", "ß", function() require("harpoon.ui").nav_file(2) end, { desc = '2st harpoon file' })
+vim.keymap.set("n", "∂", function() require("harpoon.ui").nav_file(3) end, { desc = '3st harpoon file' })
+vim.keymap.set("n", "ƒ", function() require("harpoon.ui").nav_file(4) end, { desc = '4st harpoon file' })
 -- rest-nvim hotkeys
 vim.keymap.set("n", "<leader>hx", require("rest-nvim").run, { desc = '[h]ttp request e[x]ecute' })
 vim.keymap.set("n", "<leader>hp", function() require("rest-nvim").run(true) end, { desc = '[h]ttp request [p]review' })
 vim.keymap.set("n", "<leader>hl", require("rest-nvim").last, { desc = '[h]ttp request repeat [last]' })
+--gitsigns hotkeys
+vim.keymap.set('n', '<leader>gh', require('gitsigns').preview_hunk, { buffer = bufnr, desc = '[g]it [h]unk' })
+vim.keymap.set('n', '<leader>gr', require('gitsigns').reset_hunk, { buffer = bufnr, desc = '[g]it hunk [r]eset' })
+vim.keymap.set('n', '<leader>gb', require('gitsigns').toggle_current_line_blame,
+  { buffer = bufnr, desc = '[g]it [b]lame toggle' })
+-- substitute hotkeys
+
+vim.keymap.set('n', 's', require('substitute').operator, { desc = 'substiture' })
+vim.keymap.set('n', 'ss', require('substitute').line, { desc = 'substiture line' })
+vim.keymap.set('n', 'S', require('substitute').eol, { desc = 'substiture until end of line' })
+vim.keymap.set('x', 's', require('substitute').visual, { desc = 'substiture visual' })
+--toggleterm hotkeys
+vim.keymap.set("n", "<leader>tt", "<cmd>ToggleTerm direction=horizontal<CR>", {desc = 'Toggle terminal'})
+vim.keymap.set("n", "<leader>ts", "<cmd>ToggleTerm direction=horizontal<CR>", {desc = 'Toggle terminal'})
+vim.keymap.set("t", '<esc>', '<C-\\><C-n>')
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
 require('nvim-treesitter.configs').setup {
   -- Add languages to be installed here that you want installed for treesitter
   ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim',
-    'scala', 'hurl', 'http', 'json', 'dockerfile' },
+    'scala', 'hurl', 'http', 'json', 'dockerfile', 'terraform', 'html', 'css' },
 
   -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
   auto_install = false,
@@ -586,9 +610,9 @@ local servers = {
   -- gopls = {},
   pyright = {},
   rust_analyzer = {},
-  -- tsserver = {},
-  -- html = { filetypes = { 'html', 'twig', 'hbs'} },
-
+  tsserver = {},
+  html = { filetypes = { 'html', 'twig', 'hbs' } },
+  cssls = {},
   lua_ls = {
     Lua = {
       workspace = { checkThirdParty = false },
@@ -689,5 +713,18 @@ cmp.setup {
   },
 }
 
+cmp.setup.cmdline(':', {
+  mapping = cmp.mapping.preset.cmdline(),
+  sources = cmp.config.sources({
+    { name = 'path' }
+  }, {
+    {
+      name = 'cmdline',
+      option = {
+        ignore_cmds = { 'Man', '!' }
+      }
+    }
+  })
+})
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
