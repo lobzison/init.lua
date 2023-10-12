@@ -58,7 +58,6 @@ if not vim.loop.fs_stat(lazypath) then
   }
 end
 vim.opt.rtp:prepend(lazypath)
-
 -- NOTE: Here is where you install your plugins.
 --  You can configure plugins using the `config` key.
 --
@@ -162,8 +161,9 @@ require('lazy').setup({
         icons_enabled = false,
         theme = 'onedark',
         component_separators = '|',
-        section_separators = '',
+        section_separators = ''
       },
+      sections = { lualine_c = { 'filename', 'g:metals_status' } }
     },
   },
 
@@ -172,16 +172,15 @@ require('lazy').setup({
     'lukas-reineke/indent-blankline.nvim',
     -- Enable `lukas-reineke/indent-blankline.nvim`
     -- See `:help indent_blankline.txt`
-    opts = {
-      char = '┊',
-      show_trailing_blankline_indent = false,
-    },
+    main = "ibl",
+    opts = {},
   },
 
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim',         opts = {} },
 
   -- autoformat on save
+  -- fucks with autosave. Can only have one, so format will be done manually until the plugin allows to exclude formatiing from und
   { 'lukas-reineke/lsp-format.nvim', opts = { sync = true }, enabled = false },
 
   -- Fuzzy Finder (files, lsp, etc)
@@ -301,14 +300,12 @@ require('lazy').setup({
     },
     {
       'gbprod/substitute.nvim',
-      opts = { highlight_substituted_text = { timer = 150 } },
-      config = function(_, opts) require('substitute').setup(opts) end,
+      opts = { highlight_substituted_text = { timer = 150 } }
     },
-    { 'akinsho/toggleterm.nvim', version = "*", opts = { --[[ things you want to change go here]] } },
+    { 'akinsho/toggleterm.nvim', version = "*", opts = {} },
     {
       'Pocco81/auto-save.nvim',
-      opts = { execution_message = { message = function() return ("") end } },
-      config = function(_, opts) require('auto-save').setup(opts) end
+      opts = { execution_message = { message = function() return ("") end } }
     },
   },
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
@@ -343,6 +340,8 @@ vim.wo.cursorline = true
 -- Indentation size
 vim.o.expandtab = true
 vim.o.tabstop = 4
+vim.o.softtabstop = 4
+vim.o.expandtab = true
 vim.o.shiftwidth = 4
 
 -- Make line numbers default
@@ -423,9 +422,6 @@ require('telescope').setup {
 -- Enable telescope fzf native, if installed
 pcall(require('telescope').load_extension, 'fzf')
 
--- Enable toggleterm
-require("toggleterm").setup {}
-
 -- See `:help telescope.builtin`
 vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { desc = '[?] Find recently opened files' })
 vim.keymap.set('n', '<leader><space>', require('telescope.builtin').buffers, { desc = '[ ] Find existing buffers' })
@@ -470,8 +466,8 @@ vim.keymap.set('n', 'ss', require('substitute').line, { desc = 'substiture line'
 vim.keymap.set('n', 'S', require('substitute').eol, { desc = 'substiture until end of line' })
 vim.keymap.set('x', 's', require('substitute').visual, { desc = 'substiture visual' })
 --toggleterm hotkeys
-vim.keymap.set("n", "<leader>tt", "<cmd>ToggleTerm direction=horizontal<CR>", {desc = 'Toggle terminal'})
-vim.keymap.set("n", "<leader>ts", "<cmd>ToggleTerm direction=horizontal<CR>", {desc = 'Toggle terminal'})
+vim.keymap.set("n", "<leader>tt", "<cmd>ToggleTerm direction=horizontal<CR>", { desc = 'Toggle terminal' })
+vim.keymap.set("n", "<leader>ts", "<cmd>ToggleTerm direction=horizontal<CR>", { desc = 'Toggle terminal' })
 vim.keymap.set("t", '<esc>', '<C-\\><C-n>')
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
@@ -654,7 +650,7 @@ metals_config.settings = {
 metals_config.capabilities = require("cmp_nvim_lsp").default_capabilities()
 metals_config.on_attach = on_attach
 local nvim_metals_group = vim.api.nvim_create_augroup("nvim-metals", { clear = true })
--- metals_config.init_options.statusBarProvider = "on"
+metals_config.init_options.statusBarProvider = "on"
 vim.api.nvim_create_autocmd("FileType", {
   -- NOTE: You may or may not want java included here. You will need it if you
   -- want basic Java support but it may also conflict if you are using
