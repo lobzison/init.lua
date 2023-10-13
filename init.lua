@@ -283,6 +283,7 @@ require('lazy').setup({
 
     {
       'ThePrimeagen/harpoon',
+      opts = { global_settings = { mark_branch = true } },
       dependencies = {
         'nvim-lua/plenary.nvim'
       }
@@ -323,6 +324,11 @@ require('lazy').setup({
   -- { import = 'custom.plugins' },
 }, {})
 
+vim.filetype.add({
+  extension = {
+    mjml = "html",
+  },
+})
 -- [[ Setting options ]]
 -- See `:help vim.o`
 -- NOTE: You can change these options as you wish!
@@ -446,10 +452,10 @@ vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = 
 vim.keymap.set("n", "<leader>a", require("harpoon.mark").add_file, { desc = '[a]dd to Harpoon' })
 vim.keymap.set("n", "<C-e>", require("harpoon.ui").toggle_quick_menu, { desc = 'Harpoon UI' })
 
-vim.keymap.set("n", "å", function() require("harpoon.ui").nav_file(1) end, { desc = '1st harpoon file' })
-vim.keymap.set("n", "ß", function() require("harpoon.ui").nav_file(2) end, { desc = '2st harpoon file' })
-vim.keymap.set("n", "∂", function() require("harpoon.ui").nav_file(3) end, { desc = '3st harpoon file' })
-vim.keymap.set("n", "ƒ", function() require("harpoon.ui").nav_file(4) end, { desc = '4st harpoon file' })
+vim.keymap.set("n", "ƒ", function() require("harpoon.ui").nav_file(1) end, { desc = '1st harpoon file' })
+vim.keymap.set("n", "∂", function() require("harpoon.ui").nav_file(2) end, { desc = '2st harpoon file' })
+vim.keymap.set("n", "ß", function() require("harpoon.ui").nav_file(3) end, { desc = '3st harpoon file' })
+vim.keymap.set("n", "å", function() require("harpoon.ui").nav_file(4) end, { desc = '4st harpoon file' })
 -- rest-nvim hotkeys
 vim.keymap.set("n", "<leader>hx", require("rest-nvim").run, { desc = '[h]ttp request e[x]ecute' })
 vim.keymap.set("n", "<leader>hp", function() require("rest-nvim").run(true) end, { desc = '[h]ttp request [p]review' })
@@ -607,7 +613,7 @@ local servers = {
   pyright = {},
   rust_analyzer = {},
   tsserver = {},
-  html = { filetypes = { 'html', 'twig', 'hbs' } },
+  html = { filetypes = { 'html', 'twig', 'hbs', 'mjml' } },
   cssls = {},
   lua_ls = {
     Lua = {
@@ -644,8 +650,10 @@ mason_lspconfig.setup_handlers {
 
 local metals_config = require("metals").bare_config()
 metals_config.settings = {
+  showInferredType = true,
   showImplicitArguments = false,
   excludedPackages = { "akka.actor.typed.javadsl", "com.github.swagger.akka.javadsl" },
+  enableSemanticHighlighting = true,
 }
 metals_config.capabilities = require("cmp_nvim_lsp").default_capabilities()
 metals_config.on_attach = on_attach
