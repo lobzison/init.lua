@@ -174,6 +174,8 @@ require('lazy').setup({
     -- See `:help indent_blankline.txt`
     main = "ibl",
     opts = {},
+    -- fucks with lsp highlighting
+    enabled = false,
   },
 
   -- "gc" to comment visual regions/lines
@@ -225,22 +227,11 @@ require('lazy').setup({
       {
         "<leader>n",
         function()
-          require("neo-tree.command").execute({ toggle = true, dir = vim.loop.cwd() })
+          require("neo-tree.command").execute({ toggle = true, dir = vim.loop.cwd(), })
         end,
         desc = "Explorer [n]eotree (cwd)",
       },
     },
-    deactivate = function()
-      vim.cmd([[Neotree close]])
-    end,
-    init = function()
-      if vim.fn.argc() == 1 then
-        local stat = vim.loop.fs_stat(vim.fn.argv(0))
-        if stat and stat.type == "directory" then
-          require("neo-tree")
-        end
-      end
-    end,
     opts = {
       sources = { "filesystem", "buffers", "git_status", "document_symbols" },
       open_files_do_not_replace_types = { "terminal", "Trouble", "qf", "Outline" },
@@ -248,8 +239,10 @@ require('lazy').setup({
         bind_to_cwd = false,
         follow_current_file = { enabled = true },
         use_libuv_file_watcher = true,
+        hijack_netrw_behavior = "open_current"
       },
       window = {
+        position = "right",
         mappings = {
           ["<space>"] = "none",
         },
@@ -263,17 +256,6 @@ require('lazy').setup({
         },
       },
     },
-    config = function(_, opts)
-      require("neo-tree").setup(opts)
-      vim.api.nvim_create_autocmd("TermClose", {
-        pattern = "*lazygit",
-        callback = function()
-          if package.loaded["neo-tree.sources.git_status"] then
-            require("neo-tree.sources.git_status").refresh()
-          end
-        end,
-      })
-    end,
   },
   {
     'scalameta/nvim-metals',
@@ -288,12 +270,14 @@ require('lazy').setup({
         'nvim-lua/plenary.nvim'
       }
     },
-
+    -- http client, think postman but good
     {
       'rest-nvim/rest.nvim',
       dependencies = {
         'nvim-lua/plenary.nvim'
       },
+      -- latest commit breaks formatting
+      commit = "8b62563",
       opts = {
         result_split_in_place = true,
         result = { show_curl_command = false }
@@ -308,6 +292,53 @@ require('lazy').setup({
       'Pocco81/auto-save.nvim',
       opts = { execution_message = { message = function() return ("") end } }
     },
+    -- debug
+    { 'mfussenegger/nvim-dap' },
+    -- autopairing
+    { 'cohama/lexima.vim' },
+    -- autoformat
+    {
+      'stevearc/conform.nvim',
+      event = { "BufWritePre" },
+      cmd = { "ConformInfo" },
+      keys = {
+        {
+          -- Customize or remove this keymap to your liking
+          "<leader>f",
+          function()
+            require("conform").format({ async = true, lsp_fallback = true })
+          end,
+          mode = "",
+          desc = "Format buffer",
+        },
+      },
+      -- Everything in opts will be passed to setup()
+      opts = {
+        -- Define your formatters
+        formatters_by_ft = {
+          python = { "black" },
+          javascript = { { "prettierd", "prettier" } },
+          rust = { { "rustfmt" } },
+          sql = { { "pg_format" } },
+        },
+        notify_on_error = true,
+        -- -- Set up format-on-save
+        -- format_on_save = { timeout_ms = 500, lsp_fallback = true },
+        -- Customize formatters
+        formatters = {
+          shfmt = {
+            prepend_args = { "-i", "2" },
+          },
+          pg_format = {
+            prepend_args = { "-f", "1", "-u", "1", "-U", "1" },
+          }
+        },
+      },
+      init = function()
+        -- If you want the formatexpr, here is the place to set it
+        vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
+      end,
+    }
   },
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
@@ -334,7 +365,7 @@ vim.filetype.add({
 -- NOTE: You can change these options as you wish!
 
 -- Set highlight on search
-vim.o.hlsearch = false
+vim.o.hlsearch = true
 
 -- Enable mouse mode
 vim.o.mouse = 'a'
@@ -381,6 +412,8 @@ vim.o.completeopt = 'menuone,noselect'
 -- NOTE: You should make sure your terminal supports this
 vim.o.termguicolors = true
 
+-- keep some context while scrolling
+vim.o.scrolloff = 8
 -- [[ Basic Keymaps ]]
 
 -- Keymaps for better default experience
@@ -423,11 +456,15 @@ require('telescope').setup {
       },
     },
   },
+  pickers = {
+    buffers = { sort_mru = true },
+  },
 }
 
 -- Enable telescope fzf native, if installed
 pcall(require('telescope').load_extension, 'fzf')
 
+require("neo-tree")
 -- See `:help telescope.builtin`
 vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { desc = '[?] Find recently opened files' })
 vim.keymap.set('n', '<leader><space>', require('telescope.builtin').buffers, { desc = '[ ] Find existing buffers' })
@@ -488,7 +525,7 @@ require('nvim-treesitter.configs').setup {
   highlight = { enable = true },
   indent = { enable = true },
   incremental_selection = {
-    enable = true,
+    enable = false,
     keymaps = {
       init_selection = '<c-space>',
       node_incremental = '<c-space>',
@@ -542,6 +579,17 @@ require('nvim-treesitter.configs').setup {
   },
 }
 
+
+vim.keymap.set('n', '<leader>cl', vim.lsp.codelens.run, { desc = '[c]ode [l]ens run' })
+-- DAP keybindings
+vim.keymap.set('n', '<leader>dc', require('dap').continue, { desc = '[d]ebug [c]ontinue' })
+vim.keymap.set('n', '<leader>dr', require('dap').repl.toggle, { desc = '[d]ebug [r]epl' })
+vim.keymap.set('n', '<leader>dK', require('dap.ui.widgets').hover, { desc = '[d]ebug widgets hover' })
+vim.keymap.set('n', '<leader>dt', require('dap').toggle_breakpoint, { desc = '[d]ebug [t]oggle breakpoint' })
+vim.keymap.set('n', '<leader>dso', require('dap').step_over, { desc = '[d]ebug [s]tep [o]ver' })
+vim.keymap.set('n', '<leader>dsi', require('dap').step_into, { desc = '[d]ebug [s]tep [i]nto' })
+vim.keymap.set('n', '<leader>dl', require('dap').run_last, { desc = '[d]ebug run [l]ast' })
+vim.keymap.set('n', '<leader>dc', require('dap').terminate, { desc = '[d]ebug [c]lose' })
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
@@ -586,15 +634,16 @@ local on_attach = function(_, bufnr)
   nmap('<leader>wl', function()
     print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
   end, '[W]orkspace [L]ist Folders')
-
+  -- setup dap for metals
+  require('metals').setup_dap()
   -- Creatymape a command `:Format` local to the LSP buffer
   vim.api.nvim_buf_create_user_command(bufnr, 'Format', function(_)
     vim.lsp.buf.format()
   end, { desc = 'Format current buffer with LSP' })
 
-  nmap('<leader>f', function(_)
-    vim.lsp.buf.format()
-  end, '[F]ormat current file')
+  -- nmap('<leader>f', function(_)
+  --   vim.lsp.buf.format()
+  -- end, '[F]ormat current file')
 
   require("lsp-format").on_attach(_, bufnr)
 end
@@ -669,6 +718,27 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
   group = nvim_metals_group,
 })
+
+local dap = require("dap")
+dap.configurations.scala = {
+  {
+    type = "scala",
+    request = "launch",
+    name = "RunOrTest",
+    metals = {
+      runType = "runOrTestFile",
+      --args = { "firstArg", "secondArg", "thirdArg" }, -- here just as an example
+    },
+  },
+  {
+    type = "scala",
+    request = "launch",
+    name = "Test Target",
+    metals = {
+      runType = "testTarget",
+    },
+  },
+}
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
 local cmp = require 'cmp'
