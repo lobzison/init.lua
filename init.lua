@@ -339,6 +339,7 @@ require('lazy').setup({
         vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
       end,
     },
+    { 'tpope/vim-surround' },
   },
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
