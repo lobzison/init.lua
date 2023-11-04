@@ -566,8 +566,8 @@ vim.keymap.set("n", "<leader>db", "<cmd>DBUIToggle<CR>", { desc = 'Toggle DBUI' 
 vim.keymap.set("n", "<leader>gg", "<cmd>G status<CR>", { desc = "Git status" })
 vim.keymap.set("n", "<leader>ga", ":Git add ", { desc = "Git add" })
 vim.keymap.set("n", "<leader>gc", "<cmd>G commit<CR>", { desc = "Git commit" })
-vim.keymap.set("n", "<leader>gp", "<cmd>G pull<CR>", { desc = "Git pull" })
-vim.keymap.set("n", "<leader>gf", "<cmd>G push<CR>", { desc = "Git push" })
+vim.keymap.set("n", "<leader>gp", "<cmd>G push<CR>", { desc = "Git push" })
+vim.keymap.set("n", "<leader>gf", "<cmd>G pull<CR>", { desc = "Git pull" })
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
 require('nvim-treesitter.configs').setup {
