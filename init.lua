@@ -163,7 +163,14 @@ require('lazy').setup({
         component_separators = '|',
         section_separators = ''
       },
-      sections = { lualine_c = { 'filename', 'g:metals_status' } }
+      sections = {
+        lualine_c = { 'filename', 'g:metals_status', function()
+          return vim.fn["db_ui#statusline"]({
+            show = { "db_name" },
+            prefix = "󰆼 ",
+          })
+        end, }
+      }
     },
   },
 
@@ -340,6 +347,44 @@ require('lazy').setup({
       end,
     },
     { 'tpope/vim-surround' },
+    { 'tpope/vim-repeat' },
+    { 'David-Kunz/gen.nvim' },
+    {
+      'kristijanhusak/vim-dadbod-ui',
+      dependencies = {
+        { 'tpope/vim-dadbod',                     lazy = true },
+        { 'kristijanhusak/vim-dadbod-completion', ft = { 'sql', 'mysql', 'plsql' }, lazy = true },
+      },
+      cmd = {
+        'DBUI',
+        'DBUIToggle',
+        'DBUIAddConnection',
+        'DBUIFindBuffer',
+      },
+      init = function()
+        -- Your DBUI configuration
+        vim.g.db_ui_use_nerd_fonts = true
+        vim.g.db_ui_execute_on_save = false
+        vim.g.db_ui_save_location = "~/Library/DBeaverData/workspace6/General/Scripts"
+        vim.g.db_ui_tmp_query_location = "~/Library/DBeaverData/workspace6/General/Scripts/msc_local"
+        -- vim.g.db_ui_force_echo_notifications = true
+        vim.g.db_ui_use_nvim_notify = true
+        vim.g.db_ui_win_position = "right"
+        vim.api.nvim_create_autocmd("FileType", {
+          pattern = { 'sql', 'mysql', 'plsql' },
+          callback = function(opts)
+            ---@diagnostic disable-next-line: missing-fields
+            require("cmp").setup.buffer({ sources = { { name = "vim-dadbod-completion" } } })
+            -- didn't figure out how to run the query under the cursor.
+            -- the following mapping is from here https://github.com/tpope/vim-dadbod/issues/33#issuecomment-912167053
+            -- allowing for vip<enter> to run the query
+            -- Would prefer something shorter, but it works
+            vim.keymap.set({ "n", "x" }, "<C-M>", "db#op_exec()",
+              { buffer = opts.buf, desc = "[dadbod] Run selected query", expr = true })
+          end,
+        })
+      end,
+    },
   },
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
@@ -515,6 +560,14 @@ vim.keymap.set('x', 's', require('substitute').visual, { desc = 'substiture visu
 vim.keymap.set("n", "<leader>tt", "<cmd>ToggleTerm direction=horizontal<CR>", { desc = 'Toggle terminal' })
 vim.keymap.set("n", "<leader>ts", "<cmd>ToggleTerm direction=horizontal<CR>", { desc = 'Toggle terminal' })
 vim.keymap.set("t", '<esc>', '<C-\\><C-n>')
+--dadbox hotkeys
+vim.keymap.set("n", "<leader>db", "<cmd>DBUIToggle<CR>", { desc = 'Toggle DBUI' })
+--fugitive hotkeys
+vim.keymap.set("n", "<leader>gg", "<cmd>G status<CR>", { desc = "Git status" })
+vim.keymap.set("n", "<leader>ga", ":Git add ", { desc = "Git add" })
+vim.keymap.set("n", "<leader>gc", "<cmd>G commit<CR>", { desc = "Git commit" })
+vim.keymap.set("n", "<leader>gp", "<cmd>G pull<CR>", { desc = "Git pull" })
+vim.keymap.set("n", "<leader>gf", "<cmd>G push<CR>", { desc = "Git push" })
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
 require('nvim-treesitter.configs').setup {
@@ -762,7 +815,6 @@ cmp.setup {
     ['<C-f>'] = cmp.mapping.scroll_docs(4),
     ['<C-Space>'] = cmp.mapping.complete {},
     ['<CR>'] = cmp.mapping.confirm {
-      behavior = cmp.ConfirmBehavior.Replace,
       select = true,
     },
     ['<Tab>'] = cmp.mapping(function(fallback)
