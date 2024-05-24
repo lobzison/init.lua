@@ -169,7 +169,7 @@ require('lazy').setup({
             show = { "db_name" },
             prefix = "󰆼 ",
           })
-        end, }
+        end, 'g:metals_bsp_status' }
       }
     },
   },
@@ -294,15 +294,16 @@ require('lazy').setup({
       'gbprod/substitute.nvim',
       opts = { highlight_substituted_text = { timer = 150 } }
     },
-    { 'akinsho/toggleterm.nvim', version = "*", opts = {} },
+    { 'akinsho/toggleterm.nvim', version = "*", opts = { auto_scroll = false, size = 15, persist_size = false } },
+
     {
       'Pocco81/auto-save.nvim',
       opts = { execution_message = { message = function() return ("") end } }
     },
     -- debug
     { 'mfussenegger/nvim-dap' },
-    -- autopairing
-    { 'cohama/lexima.vim' },
+    -- -- autopairing
+    -- { 'cohama/lexima.vim' },
     -- autoformat
     {
       'stevearc/conform.nvim',
@@ -337,7 +338,7 @@ require('lazy').setup({
             prepend_args = { "-i", "2" },
           },
           pg_format = {
-            prepend_args = { "-f", "1", "-u", "1", "-U", "1" },
+            prepend_args = { "-f", "1", "-u", "1", "-U", "1", "--no-space-function" },
           }
         },
       },
@@ -384,6 +385,24 @@ require('lazy').setup({
           end,
         })
       end,
+    },
+    {
+      'kevinhwang91/nvim-ufo',
+      dependencies = { 'kevinhwang91/promise-async' },
+      opts = {
+        provider_selector = function(bufnr, filetype, buftype)
+          return { 'treesitter', 'indent' }
+        end
+      }
+    },
+    {
+      "iamcco/markdown-preview.nvim",
+      cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+      build = "cd app && yarn install",
+      init = function()
+        vim.g.mkdp_filetypes = { "markdown" }
+      end,
+      ft = { "markdown" },
     },
   },
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
@@ -462,9 +481,16 @@ vim.o.termguicolors = true
 vim.o.scrolloff = 8
 -- [[ Basic Keymaps ]]
 
+-- folds setup
+vim.o.foldcolumn = '0' -- '0' is not bad
+vim.o.foldlevel = 99   -- Using ufo provider need a large value, feel free to decrease the value
+vim.o.foldlevelstart = 99
+vim.o.foldenable = true
 -- Keymaps for better default experience
 -- See `:help vim.keymap.set()`
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
+-- dont close markdown preview
+vim.g.mkdp_auto_close = 0
 
 -- Remap for dealing with word wrap
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
@@ -568,6 +594,9 @@ vim.keymap.set("n", "<leader>ga", ":Git add ", { desc = "Git add" })
 vim.keymap.set("n", "<leader>gc", "<cmd>G commit<CR>", { desc = "Git commit" })
 vim.keymap.set("n", "<leader>gp", "<cmd>G push<CR>", { desc = "Git push" })
 vim.keymap.set("n", "<leader>gf", "<cmd>G pull<CR>", { desc = "Git pull" })
+vim.keymap.set("n", "<leader>gt", ":Git checkout ", { desc = "Git checkout" })
+--markdown preview
+vim.keymap.set("n", "<leader>mp", "<Plug>MarkdownPreviewToggle", { desc = "Markdown preview" })
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
 require('nvim-treesitter.configs').setup {
@@ -651,6 +680,11 @@ vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous dia
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostics list' })
+-- Metals keymaps
+vim.keymap.set("n", "<leader>msi", function()
+  require("metals").toggle_setting "showImplicitArguments"
+end, { desc = "Metals: Show implicit args" })
+
 
 -- [[ Configure LSP ]]
 --  This function gets run when an LSP connects to a particular buffer.
@@ -701,7 +735,7 @@ local on_attach = function(_, bufnr)
   --   vim.lsp.buf.format()
   -- end, '[F]ormat current file')
 
-  require("lsp-format").on_attach(_, bufnr)
+  -- require("lsp-format").on_attach(_, bufnr)
 end
 
 -- Enable the following language servers
@@ -815,6 +849,7 @@ cmp.setup {
     ['<C-f>'] = cmp.mapping.scroll_docs(4),
     ['<C-Space>'] = cmp.mapping.complete {},
     ['<CR>'] = cmp.mapping.confirm {
+      behavior = cmp.ConfirmBehavior.Insert,
       select = true,
     },
     ['<Tab>'] = cmp.mapping(function(fallback)
