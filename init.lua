@@ -265,144 +265,148 @@ require('lazy').setup({
     },
   },
   {
-    'scalameta/nvim-metals',
+    'renerocksai/telekasten.nvim',
+    dependencies = { 'nvim-telescope/telescope.nvim' }
+  },
+
+  {
+    'ThePrimeagen/harpoon',
+    opts = { global_settings = { mark_branch = true } },
+    dependencies = {
+      'nvim-lua/plenary.nvim'
+    }
+  },
+  -- http client, think postman but good
+  {
+    'rest-nvim/rest.nvim',
     dependencies = {
       'nvim-lua/plenary.nvim'
     },
+    -- latest commit breaks formatting
+    commit = "8b62563",
+    opts = {
+      result_split_in_place = true,
+      result = { show_curl_command = false }
+    }
+  },
+  {
+    'gbprod/substitute.nvim',
+    opts = { highlight_substituted_text = { timer = 150 } }
+  },
+  { 'akinsho/toggleterm.nvim', version = "*", opts = { auto_scroll = false, size = 15, persist_size = false } },
 
-    {
-      'ThePrimeagen/harpoon',
-      opts = { global_settings = { mark_branch = true } },
-      dependencies = {
-        'nvim-lua/plenary.nvim'
-      }
-    },
-    -- http client, think postman but good
-    {
-      'rest-nvim/rest.nvim',
-      dependencies = {
-        'nvim-lua/plenary.nvim'
+  {
+    'Pocco81/auto-save.nvim',
+    opts = { execution_message = { message = function() return ("") end } }
+  },
+  -- debug
+  { 'mfussenegger/nvim-dap' },
+  -- -- autopairing
+  -- { 'cohama/lexima.vim' },
+  -- autoformat
+  {
+    'stevearc/conform.nvim',
+    event = { "BufWritePre" },
+    cmd = { "ConformInfo" },
+    keys = {
+      {
+        -- Customize or remove this keymap to your liking
+        "<leader>f",
+        function()
+          require("conform").format({ async = true, lsp_fallback = true })
+        end,
+        mode = "",
+        desc = "Format buffer",
       },
-      -- latest commit breaks formatting
-      commit = "8b62563",
-      opts = {
-        result_split_in_place = true,
-        result = { show_curl_command = false }
-      }
     },
-    {
-      'gbprod/substitute.nvim',
-      opts = { highlight_substituted_text = { timer = 150 } }
-    },
-    { 'akinsho/toggleterm.nvim', version = "*", opts = { auto_scroll = false, size = 15, persist_size = false } },
-
-    {
-      'Pocco81/auto-save.nvim',
-      opts = { execution_message = { message = function() return ("") end } }
-    },
-    -- debug
-    { 'mfussenegger/nvim-dap' },
-    -- -- autopairing
-    -- { 'cohama/lexima.vim' },
-    -- autoformat
-    {
-      'stevearc/conform.nvim',
-      event = { "BufWritePre" },
-      cmd = { "ConformInfo" },
-      keys = {
-        {
-          -- Customize or remove this keymap to your liking
-          "<leader>f",
-          function()
-            require("conform").format({ async = true, lsp_fallback = true })
-          end,
-          mode = "",
-          desc = "Format buffer",
+    -- Everything in opts will be passed to setup()
+    opts = {
+      -- Define your formatters
+      formatters_by_ft = {
+        python = { "black" },
+        javascript = { { "prettierd", "prettier" } },
+        rust = { { "rustfmt" } },
+        sql = { { "pg_format" } },
+      },
+      notify_on_error = true,
+      -- -- Set up format-on-save
+      -- format_on_save = { timeout_ms = 500, lsp_fallback = true },
+      -- Customize formatters
+      formatters = {
+        shfmt = {
+          prepend_args = { "-i", "2" },
         },
+        pg_format = {
+          prepend_args = { "-f", "1", "-u", "1", "-U", "1", "--no-space-function" },
+        }
       },
-      -- Everything in opts will be passed to setup()
-      opts = {
-        -- Define your formatters
-        formatters_by_ft = {
-          python = { "black" },
-          javascript = { { "prettierd", "prettier" } },
-          rust = { { "rustfmt" } },
-          sql = { { "pg_format" } },
-        },
-        notify_on_error = true,
-        -- -- Set up format-on-save
-        -- format_on_save = { timeout_ms = 500, lsp_fallback = true },
-        -- Customize formatters
-        formatters = {
-          shfmt = {
-            prepend_args = { "-i", "2" },
-          },
-          pg_format = {
-            prepend_args = { "-f", "1", "-u", "1", "-U", "1", "--no-space-function" },
-          }
-        },
-      },
-      init = function()
-        -- If you want the formatexpr, here is the place to set it
-        vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
-      end,
     },
-    { 'tpope/vim-surround' },
-    { 'tpope/vim-repeat' },
-    { 'David-Kunz/gen.nvim' },
-    {
-      'kristijanhusak/vim-dadbod-ui',
-      dependencies = {
-        { 'tpope/vim-dadbod',                     lazy = true },
-        { 'kristijanhusak/vim-dadbod-completion', ft = { 'sql', 'mysql', 'plsql' }, lazy = true },
-      },
-      cmd = {
-        'DBUI',
-        'DBUIToggle',
-        'DBUIAddConnection',
-        'DBUIFindBuffer',
-      },
-      init = function()
-        -- Your DBUI configuration
-        vim.g.db_ui_use_nerd_fonts = true
-        vim.g.db_ui_execute_on_save = false
-        vim.g.db_ui_save_location = "~/Library/DBeaverData/workspace6/General/Scripts"
-        vim.g.db_ui_tmp_query_location = "~/Library/DBeaverData/workspace6/General/Scripts/msc_local"
-        -- vim.g.db_ui_force_echo_notifications = true
-        vim.g.db_ui_use_nvim_notify = true
-        vim.g.db_ui_win_position = "right"
-        vim.api.nvim_create_autocmd("FileType", {
-          pattern = { 'sql', 'mysql', 'plsql' },
-          callback = function(opts)
-            ---@diagnostic disable-next-line: missing-fields
-            require("cmp").setup.buffer({ sources = { { name = "vim-dadbod-completion" } } })
-            -- didn't figure out how to run the query under the cursor.
-            -- the following mapping is from here https://github.com/tpope/vim-dadbod/issues/33#issuecomment-912167053
-            -- allowing for vip<enter> to run the query
-            -- Would prefer something shorter, but it works
-            vim.keymap.set({ "n", "x" }, "<C-M>", "db#op_exec()",
-              { buffer = opts.buf, desc = "[dadbod] Run selected query", expr = true })
-          end,
-        })
-      end,
+    init = function()
+      -- If you want the formatexpr, here is the place to set it
+      vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
+    end,
+  },
+  { 'tpope/vim-surround' },
+  { 'tpope/vim-repeat' },
+  { 'David-Kunz/gen.nvim' },
+  {
+    'kristijanhusak/vim-dadbod-ui',
+    dependencies = {
+      { 'tpope/vim-dadbod',                     lazy = true },
+      { 'kristijanhusak/vim-dadbod-completion', ft = { 'sql', 'mysql', 'plsql' }, lazy = true },
     },
-    {
-      'kevinhwang91/nvim-ufo',
-      dependencies = { 'kevinhwang91/promise-async' },
-      opts = {
-        provider_selector = function(bufnr, filetype, buftype)
-          return { 'treesitter', 'indent' }
-        end
-      }
+    cmd = {
+      'DBUI',
+      'DBUIToggle',
+      'DBUIAddConnection',
+      'DBUIFindBuffer',
     },
-    {
-      "iamcco/markdown-preview.nvim",
-      cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
-      build = "cd app && yarn install",
-      init = function()
-        vim.g.mkdp_filetypes = { "markdown" }
-      end,
-      ft = { "markdown" },
+    init = function()
+      -- Your DBUI configuration
+      vim.g.db_ui_use_nerd_fonts = true
+      vim.g.db_ui_execute_on_save = false
+      vim.g.db_ui_save_location = "~/Library/DBeaverData/workspace6/General/Scripts"
+      vim.g.db_ui_tmp_query_location = "~/Library/DBeaverData/workspace6/General/Scripts/msc_local"
+      -- vim.g.db_ui_force_echo_notifications = true
+      vim.g.db_ui_use_nvim_notify = true
+      vim.g.db_ui_win_position = "right"
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = { 'sql', 'mysql', 'plsql' },
+        callback = function(opts)
+          ---@diagnostic disable-next-line: missing-fields
+          require("cmp").setup.buffer({ sources = { { name = "vim-dadbod-completion" } } })
+          -- didn't figure out how to run the query under the cursor.
+          -- the following mapping is from here https://github.com/tpope/vim-dadbod/issues/33#issuecomment-912167053
+          -- allowing for vip<enter> to run the query
+          -- Would prefer something shorter, but it works
+          vim.keymap.set({ "n", "x" }, "<C-M>", "db#op_exec()",
+            { buffer = opts.buf, desc = "[dadbod] Run selected query", expr = true })
+        end,
+      })
+    end,
+  },
+  {
+    'kevinhwang91/nvim-ufo',
+    dependencies = { 'kevinhwang91/promise-async' },
+    opts = {
+      provider_selector = function(bufnr, filetype, buftype)
+        return { 'treesitter', 'indent' }
+      end
+    }
+  },
+  {
+    "iamcco/markdown-preview.nvim",
+    cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+    build = "cd app && yarn install",
+    init = function()
+      vim.g.mkdp_filetypes = { "markdown" }
+    end,
+    ft = { "markdown" },
+  },
+  {
+    'scalameta/nvim-metals',
+    dependencies = {
+      'nvim-lua/plenary.nvim'
     },
   },
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
@@ -533,6 +537,11 @@ require('telescope').setup {
     buffers = { sort_mru = true },
   },
 }
+require('telekasten').setup({
+  home = vim.fn.expand('~/zettelkasten'),
+  template_new_daily = vim.fn.expand('~/zettelkasten/templates/daily.md'),
+  template_new_note = vim.fn.expand('~/zettelkasten/templates/generic.md')
+})
 
 -- Enable telescope fzf native, if installed
 pcall(require('telescope').load_extension, 'fzf')
@@ -595,6 +604,12 @@ vim.keymap.set("n", "<leader>gc", "<cmd>G commit<CR>", { desc = "Git commit" })
 vim.keymap.set("n", "<leader>gp", "<cmd>G push<CR>", { desc = "Git push" })
 vim.keymap.set("n", "<leader>gf", "<cmd>G pull<CR>", { desc = "Git pull" })
 vim.keymap.set("n", "<leader>gt", ":Git checkout ", { desc = "Git checkout" })
+-- notes
+vim.keymap.set("n", "<leader>nt", "<cmd>Telekasten goto_today<CR>", { desc = "Open today's note" })
+vim.keymap.set("n", "<leader>nn", "<cmd>Telekasten new_note<CR>", { desc = "Open new note" })
+vim.keymap.set("n", "<leader>nf", "<cmd>Telekasten find_notes<CR>", { desc = "Find note by name" })
+vim.keymap.set("n", "<leader>ng", "<cmd>Telekasten search_notes<CR>", { desc = "Grep notes" })
+vim.keymap.set("n", "<leader>nd", "<cmd>Telekasten toggle_todo<CR>", { desc = "Toggle done status" })
 --markdown preview
 vim.keymap.set("n", "<leader>mp", "<Plug>MarkdownPreviewToggle", { desc = "Markdown preview" })
 -- [[ Configure Treesitter ]]
@@ -706,10 +721,10 @@ local on_attach = function(_, bufnr)
   nmap('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
   nmap('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
 
-  nmap('gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
+  nmap('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
   nmap('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
   nmap('gi', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
-  nmap('<leader>D', vim.lsp.buf.type_definition, 'Type [D]efinition')
+  nmap('<leader>D', require('telescope.builtin').lsp_type_definitions, 'Type [D]efinition')
   nmap('<leader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
   nmap('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
 
