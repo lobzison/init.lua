@@ -409,6 +409,18 @@ require('lazy').setup({
       'nvim-lua/plenary.nvim'
     },
   },
+
+  {
+    "OXY2DEV/markview.nvim",
+    dependencies = {
+      -- You may not need this if you don't lazy load
+      -- Or if the parsers are in your $RUNTIMEPATH
+      "nvim-treesitter/nvim-treesitter",
+
+      "nvim-tree/nvim-web-devicons"
+    },
+    enabled = false
+  }
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
   --       Uncomment any of the lines below to enable them.
@@ -540,7 +552,8 @@ require('telescope').setup {
 require('telekasten').setup({
   home = vim.fn.expand('~/zettelkasten'),
   template_new_daily = vim.fn.expand('~/zettelkasten/templates/daily.md'),
-  template_new_note = vim.fn.expand('~/zettelkasten/templates/generic.md')
+  template_new_note = vim.fn.expand('~/zettelkasten/templates/generic.md'),
+  auto_set_filetype = false
 })
 
 -- Enable telescope fzf native, if installed
@@ -612,6 +625,9 @@ vim.keymap.set("n", "<leader>ng", "<cmd>Telekasten search_notes<CR>", { desc = "
 vim.keymap.set("n", "<leader>nd", "<cmd>Telekasten toggle_todo<CR>", { desc = "Toggle done status" })
 --markdown preview
 vim.keymap.set("n", "<leader>mp", "<Plug>MarkdownPreviewToggle", { desc = "Markdown preview" })
+-- diff keymaps
+vim.keymap.set("n", "<leader>df", "<cmd>diffthis<CR>", { desc = "Add current buffer to diff" })
+vim.keymap.set("n", "<leader>dy", "<cmd>diffthis<CR><cmd>vnew<CR>p<cmd>diffthis<CR>", { desc = "Diff current buffer with yank" })
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
 require('nvim-treesitter.configs').setup {
