@@ -813,9 +813,59 @@ require('lazy').setup({
     opts = {
       hints = { enabled = false },
       claude = {
-        model = "claude-3-5-sonnet-latest",
-        -- model = "claude-3-5-haiku-latest",
+        model = "claude-3-7-sonnet-latest",
       },
+      openai = {
+    endpoint = "https://api.openai.com/v1",
+    model = "gpt-4o",
+    timeout = 30000, -- Timeout in milliseconds, increase this for reasoning models
+    temperature = 0,
+    max_completion_tokens = 16384, -- Increase this to include reasoning tokens (for reasoning models)
+    reasoning_effort = "medium", -- low|medium|high, only used for reasoning models
+  },
+    disabled_tools = {
+        "list_files",
+        "search_files",
+        "read_file",
+        "create_file",
+        "rename_file",
+        "delete_file",
+        "create_dir",
+        "rename_dir",
+        "delete_dir",
+        "bash",
+        "rag_search",
+        "python",
+        "git_diff",
+        "git_commit",
+        "list_files",
+        "search_files",
+        "search_keyword",
+        "read_file_toplevel_symbols",
+        "read_file",
+        "create_file",
+        "rename_file",
+        "delete_file",
+        "create_dir",
+        "rename_dir",
+        "delete_dir",
+        "bash",
+        "web_search",
+        "fetch"
+    },
+      behaviour = {
+            auto_suggestions = false,
+        },
+        system_prompt = function()
+            local hub = require("mcphub").get_hub_instance()
+            return hub:get_active_servers_prompt()
+        end,
+        -- The custom_tools type supports both a list and a function that returns a list. Using a function here prevents requiring mcphub before it's loaded
+        custom_tools = function()
+            return {
+                require("mcphub.extensions.avante").mcp_tool(),
+            }
+        end,
     },
     -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
     build = "make",
@@ -827,6 +877,7 @@ require('lazy').setup({
       "MunifTanjim/nui.nvim",
       --- The below dependencies are optional,
       "nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
+      "ravitemer/mcphub.nvim",
       {
         -- support for image pasting
         "HakonHarnes/img-clip.nvim",
@@ -853,7 +904,34 @@ require('lazy').setup({
         ft = { "markdown", "Avante" },
       },
     },
-  }
+  },
+    {
+        "ravitemer/mcphub.nvim",
+        dependencies = {
+          "nvim-lua/plenary.nvim",  -- Required for Job and HTTP requests
+        },
+        -- comment the following line to ensure hub will be ready at the earliest
+        cmd = "MCPHub",  -- lazy load by default
+        build = "npm install -g mcp-hub@latest",  -- Installs required mcp-hub npm module
+        -- uncomment this if you don't want mcp-hub to be available globally or can't use -g
+        -- build = "bundled_build.lua",  -- Use this and set use_bundled_binary = true in opts  (see Advanced configuration)
+        config = function()
+          require("mcphub").setup({
+                -- Extensions configuration
+                extensions = {
+                    avante = {
+                        auto_approve_mcp_tool_calls = true, -- Auto approves mcp tool calls.
+                    },
+                    codecompanion = {
+                        -- Show the mcp tool result in the chat buffer
+                        -- NOTE:if the result is markdown with headers, content after the headers wont be sent by codecompanion
+                        show_result_in_chat = false,
+                        make_vars = true, -- make chat #variables from MCP server resources
+                    },
+                },
+            })
+        end,
+    }
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
   --       Uncomment any of the lines below to enable them.
@@ -1055,7 +1133,13 @@ vim.keymap.set("n", "<leader>msi", function()
   require("metals").toggle_setting "showImplicitArguments"
 end, { desc = "Metals: Show implicit args" })
 
-
+--avante esc fix
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'Avante',
+  callback = function()
+    vim.keymap.set({ 'n', 'o' }, '<ESC>', '<Nop>', { buffer = true })
+  end
+})
 
 -- Enable the following language servers
 --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
