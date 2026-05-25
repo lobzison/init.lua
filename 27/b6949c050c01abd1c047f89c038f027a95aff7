@@ -1,0 +1,19 @@
+after/queries/rust/injections.scm
+  s_652667713c3aad::t_62e3550f868f3b 1-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "27b6949c050c01abd1c047f89c038f027a95aff7",
+  "prompts": {},
+  "sessions": {
+    "s_652667713c3aad": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6c8f3711-4cbf-46a4-ae26-e1929f589bfa",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Gleb Lobov <lobzison@gmail.com>"
+    }
+  }
+}
