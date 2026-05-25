@@ -96,6 +96,8 @@ require('lazy').setup({
 
     -- NOTE: This is where your plugins related to LSP can be installed.
     --  The configuration is done below. Search for lspconfig to find it below.
+    -- { 'github/copilot.vim', event = "VeryLazy" },
+
     {
         -- LSP Configuration & Plugins
         'neovim/nvim-lspconfig',
@@ -640,36 +642,36 @@ require('lazy').setup({
                 bind_to_cwd = false,
                 follow_current_file = { enabled = true },
                 use_libuv_file_watcher = true,
-                commands = {
-                    avante_add_files = function(state)
-                        local node = state.tree:get_node()
-                        local filepath = node:get_id()
-                        local relative_path = require('avante.utils').relative_path(filepath)
-
-                        local sidebar = require('avante').get()
-
-                        local open = sidebar:is_open()
-                        -- ensure avante sidebar is open
-                        if not open then
-                            require('avante.api').ask()
-                            sidebar = require('avante').get()
-                        end
-
-                        sidebar.file_selector:add_selected_file(relative_path)
-
-                        -- remove neo tree buffer
-                        if not open then
-                            sidebar.file_selector:remove_selected_file('neo-tree filesystem [1]')
-                        end
-                    end,
-                },
+                -- commands = {
+                --     avante_add_files = function(state)
+                --         local node = state.tree:get_node()
+                --         local filepath = node:get_id()
+                --         local relative_path = require('avante.utils').relative_path(filepath)
+                --
+                --         local sidebar = require('avante').get()
+                --
+                --         local open = sidebar:is_open()
+                --         -- ensure avante sidebar is open
+                --         if not open then
+                --             require('avante.api').ask()
+                --             sidebar = require('avante').get()
+                --         end
+                --
+                --         sidebar.file_selector:add_selected_file(relative_path)
+                --
+                --         -- remove neo tree buffer
+                --         if not open then
+                --             sidebar.file_selector:remove_selected_file('neo-tree filesystem [1]')
+                --         end
+                --     end,
+                -- },
                 hijack_netrw_behavior = "open_current"
             },
             window = {
                 position = "right",
                 mappings = {
                     ["<space>"] = "none",
-                    ['oa'] = 'avante_add_files',
+                    -- ['oa'] = 'avante_add_files',
                 },
             },
             -- default_component_configs = {
@@ -791,7 +793,14 @@ require('lazy').setup({
         'gbprod/substitute.nvim',
         opts = { highlight_substituted_text = { timer = 150 } }
     },
-    { 'akinsho/toggleterm.nvim', version = "*",                           opts = { auto_scroll = false, size = 15, persist_size = false } },
+    {
+        'akinsho/toggleterm.nvim',
+        opts = {
+            auto_scroll = false,
+            -- size = 15,
+            persist_size = true,
+        }
+    },
 
     {
         'Pocco81/auto-save.nvim',
@@ -903,7 +912,7 @@ require('lazy').setup({
             formatters_by_ft = {
                 python = { "black" },
                 javascript = { { "prettierd", "prettier" } },
-                rust = { { "rustfmt" } },
+                -- rust = { { "rustfmt" } },
                 sql = { { "pg_format" } },
             },
             notify_on_error = true,
@@ -924,8 +933,22 @@ require('lazy').setup({
             vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
         end,
     },
-    { 'tpope/vim-surround',      event = { "BufNewFile", "BufReadPost" }, },
-    { 'tpope/vim-repeat',        event = { "BufNewFile", "BufReadPost" }, },
+    {
+        "clabby/difftastic.nvim",
+        dependencies = { "MunifTanjim/nui.nvim" },
+        config = function()
+            require("difftastic-nvim").setup({
+                download = true, -- Auto-download pre-built binary
+                vcs = "git"
+            })
+        end,
+        keys = {
+            { "<leader>gd", "<cmd>Difft<CR>", desc = "Difftastic view", },
+        },
+
+    },
+    { 'tpope/vim-surround', event = { "BufNewFile", "BufReadPost" }, },
+    { 'tpope/vim-repeat',   event = { "BufNewFile", "BufReadPost" }, },
     {
         'kristijanhusak/vim-dadbod-ui',
         dependencies = {
@@ -982,39 +1005,40 @@ require('lazy').setup({
         end,
         ft = { "markdown" },
     },
-    {
-        'scalameta/nvim-metals',
-        dependencies = {
-            'nvim-lua/plenary.nvim',
-            'mfussenegger/nvim-dap',
-        },
-        event = { "FileType scala", "FileType sbt", "FileType java" },
-        config = function()
-            -- metals
-
-            local metals_config = require("metals").bare_config()
-            metals_config.settings = {
-                showInferredType = true,
-                showImplicitArguments = false,
-                excludedPackages = { "akka.actor.typed.javadsl", "com.github.swagger.akka.javadsl" },
-                enableSemanticHighlighting = true,
-            }
-            metals_config.capabilities = require("cmp_nvim_lsp").default_capabilities()
-            metals_config.on_attach = on_attach
-            local nvim_metals_group = vim.api.nvim_create_augroup("nvim-metals", { clear = true })
-            metals_config.init_options.statusBarProvider = "on"
-            vim.api.nvim_create_autocmd("FileType", {
-                -- NOTE: You may or may not want java included here. You will need it if you
-                -- want basic Java support but it may also conflict if you are using
-                -- something like nvim-jdtls which also works on a java filetype autocmd.
-                pattern = { "scala", "sbt", "java" },
-                callback = function()
-                    require("metals").initialize_or_attach(metals_config)
-                end,
-                group = nvim_metals_group,
-            })
-        end
-    },
+    -- {
+    --     'scalameta/nvim-metals',
+    --     dependencies = {
+    --         'nvim-lua/plenary.nvim',
+    --         'mfussenegger/nvim-dap',
+    --     },
+    --     event = { "FileType scala", "FileType sbt", "FileType java" },
+    --     config = function()
+    --         -- metals
+    --
+    --         local metals_config = require("metals").bare_config()
+    --         metals_config.settings = {
+    --             showInferredType = true,
+    --             showImplicitArguments = false,
+    --             excludedPackages = { "akka.actor.typed.javadsl", "com.github.swagger.akka.javadsl" },
+    --             enableSemanticHighlighting = true,
+    --             startMcpServer = true,
+    --         }
+    --         metals_config.capabilities = require("cmp_nvim_lsp").default_capabilities()
+    --         metals_config.on_attach = on_attach
+    --         local nvim_metals_group = vim.api.nvim_create_augroup("nvim-metals", { clear = true })
+    --         metals_config.init_options.statusBarProvider = "on"
+    --         vim.api.nvim_create_autocmd("FileType", {
+    --             -- NOTE: You may or may not want java included here. You will need it if you
+    --             -- want basic Java support but it may also conflict if you are using
+    --             -- something like nvim-jdtls which also works on a java filetype autocmd.
+    --             pattern = { "scala", "sbt", "java" },
+    --             callback = function()
+    --                 require("metals").initialize_or_attach(metals_config)
+    --             end,
+    --             group = nvim_metals_group,
+    --         })
+    --     end
+    -- },
 
     {
         "OXY2DEV/markview.nvim",
@@ -1031,124 +1055,154 @@ require('lazy').setup({
         "stevearc/dressing.nvim",
         event = { "InsertEnter", "CmdlineEnter" },
     },
+
     {
-        "yetone/avante.nvim",
-        keys = {
-            { "<leader>aa", "<cmd>AvanteToggle<CR>" },
-        },
-        -- version = true, -- set this if you want to always pull the latest change
+        "olimorris/codecompanion.nvim",
         opts = {
-            hints = { enabled = false },
-            claude = {
-                model = "claude-3-7-sonnet-latest",
+            strategies = {
+                chat = {
+                    adapter = "anthropic",
+                },
             },
-            openai = {
-                endpoint = "https://api.openai.com/v1",
-                model = "gpt-4o",
-                timeout = 30000,               -- Timeout in milliseconds, increase this for reasoning models
-                temperature = 0,
-                max_completion_tokens = 16384, -- Increase this to include reasoning tokens (for reasoning models)
-                reasoning_effort = "medium",   -- low|medium|high, only used for reasoning models
-            },
-            disabled_tools = {
-                -- "list_files",
-                -- "search_files",
-                -- "read_file",
-                -- "create_file",
-                -- "rename_file",
-                "delete_file",
-                -- "create_dir",
-                -- "rename_dir",
-                "delete_dir",
-                "bash",
-                -- "rag_search",
-                "python",
-                -- "git_diff",
-                "git_commit",
-                -- "search_keyword",
-                -- "read_file_toplevel_symbols",
-                -- "web_search",
-                -- "fetch"
-            },
-            behaviour = {
-                auto_suggestions = false,
-            },
-            system_prompt = function()
-                local hub = require("mcphub").get_hub_instance()
-                return hub:get_active_servers_prompt()
-            end,
-            -- The custom_tools type supports both a list and a function that returns a list. Using a function here prevents requiring mcphub before it's loaded
-            custom_tools = function()
-                return {
-                    require("mcphub.extensions.avante").mcp_tool(),
-                }
-            end,
         },
-        -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
-        build = "make",
-        -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
         dependencies = {
-            "nvim-treesitter/nvim-treesitter",
-            "stevearc/dressing.nvim",
             "nvim-lua/plenary.nvim",
-            "MunifTanjim/nui.nvim",
-            --- The below dependencies are optional,
-            "nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
-            "ravitemer/mcphub.nvim",
-            {
-                -- support for image pasting
-                "HakonHarnes/img-clip.nvim",
-                event = "VeryLazy",
-                opts = {
-                    -- recommended settings
-                    default = {
-                        embed_image_as_base64 = false,
-                        prompt_for_file_name = false,
-                        drag_and_drop = {
-                            insert_mode = true,
-                        },
-                        -- required for Windows users
-                        use_absolute_path = true,
-                    },
-                },
-            },
-            {
-                -- Make sure to set this up properly if you have lazy=true
-                'MeanderingProgrammer/render-markdown.nvim',
-                opts = {
-                    file_types = { "markdown", "Avante" },
-                },
-                ft = { "markdown", "Avante" },
-            },
+            "nvim-treesitter/nvim-treesitter",
         },
     },
     {
-        "ravitemer/mcphub.nvim",
-        dependencies = {
-            "nvim-lua/plenary.nvim", -- Required for Job and HTTP requests
-        },
-        -- comment the following line to ensure hub will be ready at the earliest
-        cmd = "MCPHub",                          -- lazy load by default
-        build = "npm install -g mcp-hub@latest", -- Installs required mcp-hub npm module
-        -- uncomment this if you don't want mcp-hub to be available globally or can't use -g
-        -- build = "bundled_build.lua",  -- Use this and set use_bundled_binary = true in opts  (see Advanced configuration)
-        config = function()
-            require("mcphub").setup({
-                -- Extensions configuration
-                extensions = {
-                    avante = {
-                        auto_approve_mcp_tool_calls = true, -- Auto approves mcp tool calls.
-                    },
-                    codecompanion = {
-                        -- Show the mcp tool result in the chat buffer
-                        -- NOTE:if the result is markdown with headers, content after the headers wont be sent by codecompanion
-                        show_result_in_chat = false,
-                        make_vars = true, -- make chat #variables from MCP server resources
-                    },
-                },
-            })
-        end,
-    }
+        'mrcjkb/rustaceanvim',
+        version = '^9', -- Recommended
+        lazy = false,   -- This plugin is already lazy
+    },
+    -- {
+    --     "rshtml/neovim",
+    --     name = "rshtml",
+    --
+    --     dependencies = {
+    --         "mason-org/mason.nvim",
+    --         "neovim/nvim-lspconfig",
+    --         "nvim-treesitter/nvim-treesitter",
+    --     },
+    -- },
+
+    -- {
+    --     "yetone/avante.nvim",
+    --     keys = {
+    --         { "<leader>aa", "<cmd>AvanteToggle<CR>" },
+    --     },
+    --     -- version = true, -- set this if you want to always pull the latest change
+    --     opts = {
+    --         hints = { enabled = false },
+    --         providers = {
+    --             claude = {
+    --                 model = "claude-3-7-sonnet-latest",
+    --                 disable_tools = true, -- disable tools!
+    --             },
+    --         },
+    --         mode = "legacy",
+    --         disable_tools = true,         -- disable tools!
+    --         disabled_tools = {
+    --             "ls",
+    --             "view",
+    --             "list_files",
+    --             "search_files",
+    --             "read_file",
+    --             "create_file",
+    --             "rename_file",
+    --             "delete_file",
+    --             "create_dir",
+    --             "rename_dir",
+    --             "delete_dir",
+    --             "bash",
+    --             "rag_search",
+    --             "python",
+    --             "git_diff",
+    --             "git_commit",
+    --             "search_keyword",
+    --             "read_file_toplevel_symbols",
+    --             "web_search",
+    --             "fetch"
+    --         },
+    --         behaviour = {
+    --             auto_suggestions = false,
+    --         },
+    --         -- system_prompt = function()
+    --         --     local hub = require("mcphub").get_hub_instance()
+    --         --     return hub:get_active_servers_prompt()
+    --         -- end,
+    --         -- -- The custom_tools type supports both a list and a function that returns a list. Using a function here prevents requiring mcphub before it's loaded
+    --         -- custom_tools = function()
+    --         --     return {
+    --         --         require("mcphub.extensions.avante").mcp_tool(),
+    --         --     }
+    --         -- end,
+    --     },
+    --     -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
+    --     build = "make",
+    --     -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
+    --     dependencies = {
+    --         "nvim-treesitter/nvim-treesitter",
+    --         "stevearc/dressing.nvim",
+    --         "nvim-lua/plenary.nvim",
+    --         "MunifTanjim/nui.nvim",
+    --         --- The below dependencies are optional,
+    --         "nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
+    --         "ravitemer/mcphub.nvim",
+    --         {
+    --             -- support for image pasting
+    --             "HakonHarnes/img-clip.nvim",
+    --             event = "VeryLazy",
+    --             opts = {
+    --                 -- recommended settings
+    --                 default = {
+    --                     embed_image_as_base64 = false,
+    --                     prompt_for_file_name = false,
+    --                     drag_and_drop = {
+    --                         insert_mode = true,
+    --                     },
+    --                     -- required for Windows users
+    --                     use_absolute_path = true,
+    --                 },
+    --             },
+    --         },
+    --         {
+    --             -- Make sure to set this up properly if you have lazy=true
+    --             'MeanderingProgrammer/render-markdown.nvim',
+    --             opts = {
+    --                 file_types = { "markdown", "Avante" },
+    --             },
+    --             ft = { "markdown", "Avante" },
+    --         },
+    --     },
+    -- },
+    -- {
+    --     "ravitemer/mcphub.nvim",
+    --     dependencies = {
+    --         "nvim-lua/plenary.nvim", -- Required for Job and HTTP requests
+    --     },
+    --     -- comment the following line to ensure hub will be ready at the earliest
+    --     cmd = "MCPHub",                          -- lazy load by default
+    --     build = "npm install -g mcp-hub@latest", -- Installs required mcp-hub npm module
+    --     -- uncomment this if you don't want mcp-hub to be available globally or can't use -g
+    --     -- build = "bundled_build.lua",  -- Use this and set use_bundled_binary = true in opts  (see Advanced configuration)
+    --     config = function()
+    --         require("mcphub").setup({
+    --             -- Extensions configuration
+    --             extensions = {
+    --                 avante = {
+    --                     auto_approve_mcp_tool_calls = true, -- Auto approves mcp tool calls.
+    --                 },
+    --                 codecompanion = {
+    --                     -- Show the mcp tool result in the chat buffer
+    --                     -- NOTE:if the result is markdown with headers, content after the headers wont be sent by codecompanion
+    --                     show_result_in_chat = false,
+    --                     make_vars = true, -- make chat #variables from MCP server resources
+    --                 },
+    --             },
+    --         })
+    --     end,
+    -- }
     -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
     --       These are some example plugins that I've included in the kickstart repository.
     --       Uncomment any of the lines below to enable them.
@@ -1300,8 +1354,9 @@ end, { desc = '[/] Fuzzily search in current buffer' })
 
 vim.keymap.set('n', '<leader>gf', require('telescope.builtin').git_files, { desc = 'Search [G]it [F]iles' })
 vim.keymap.set('n', '<leader>sf', require('telescope.builtin').find_files, { desc = '[S]earch [F]iles' })
-vim.keymap.set('n', '<leader>se', function() require('telescope.builtin').find_files({ hidden = true }) end,
-    { desc = '[S]earch [E]verywhere' })
+vim.keymap.set('n', '<leader>se', function()
+    require('telescope.builtin').find_files({ hidden = true, file_ignore_patterns = { "^%.git/" } })
+end, { desc = '[S]earch [E]verywhere' })
 vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { desc = '[S]earch [H]elp' })
 vim.keymap.set('n', '<leader>sw', require('telescope.builtin').grep_string, { desc = '[S]earch current [W]ord' })
 vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc = '[S]earch by [G]rep' })
@@ -1320,8 +1375,12 @@ vim.keymap.set('n', 'ss', require('substitute').line, { desc = 'substiture line'
 vim.keymap.set('n', 'S', require('substitute').eol, { desc = 'substiture until end of line' })
 vim.keymap.set('x', 's', require('substitute').visual, { desc = 'substiture visual' })
 --toggleterm hotkeys
-vim.keymap.set("n", "<leader>tt", "<cmd>ToggleTerm direction=horizontal<CR>", { desc = 'Toggle terminal' })
+vim.keymap.set("n", "<leader>tt", "<cmd>ToggleTerm direction=horizontal size=15<CR>", { desc = 'Toggle terminal' })
+vim.keymap.set("n", "<leader>tn", "<cmd>TermNew<CR>", { desc = 'Create new terminal' })
+vim.keymap.set("n", "<leader>tj", "<cmd>ToggleTerm size=9999<CR>", { desc = 'Toggle terminal full size' })
+vim.keymap.set("n", "<leader>tm", "<cmd>TermNew dir=horizontal<CR>", { desc = 'Create new terminal' })
 vim.keymap.set("t", '<esc>', '<C-\\><C-n>')
+
 --dadbox hotkeys
 vim.keymap.set("n", "<leader>db", "<cmd>DBUIToggle<CR>", { desc = 'Toggle DBUI' })
 --fugitive hotkeys
