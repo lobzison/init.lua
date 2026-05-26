@@ -376,7 +376,10 @@ require('lazy').setup({
             local cmp = require 'cmp'
             local luasnip = require 'luasnip'
             require('luasnip.loaders.from_vscode').lazy_load()
-            luasnip.config.setup {}
+            luasnip.config.setup {
+                ft_func = require("luasnip.extras.filetype_functions").from_cursor_pos,
+            }
+            require('luasnip.loaders.from_vscode').load({ include = { 'html' } })
 
             cmp.setup {
                 snippet = {
@@ -435,7 +438,7 @@ require('lazy').setup({
         end,
     },
 
-    -- Useful plugin to show you pending keybinds.
+-- Useful plugin to show you pending keybinds.
     { 'folke/which-key.nvim',          opts = {} },
     {
         -- Adds git related signs to the gutter, as well as utilities for managing changes
@@ -614,6 +617,21 @@ require('lazy').setup({
         },
         config = function(_, opts)
             require("nvim-treesitter.configs").setup(opts)
+
+            local files = vim.treesitter.query.get_files('rust', 'injections')
+            local parts = {}
+            for _, f in ipairs(files) do
+                local content = vim.fn.readfile(f)
+                local text = table.concat(content, '\n')
+                text = text:gsub('^;extends%s*\n?', '')
+                table.insert(parts, text)
+            end
+            local src = table.concat(parts, '\n')
+            local patched = src:gsub(
+                '#not%-any%-of%? @_macro_name "slint" "html" "json"',
+                '#not-any-of? @_macro_name "slint" "html" "json" "v"'
+            )
+            vim.treesitter.query.set('rust', 'injections', patched)
         end,
     },
 
