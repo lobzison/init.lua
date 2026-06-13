@@ -113,7 +113,7 @@ require('lazy').setup({
             { 'j-hui/fidget.nvim',    opts = {} },
 
             -- Allows extra capabilities provided by blink.cmp
-            { 'saghen/blink.cmp', dependencies = { 'saghen/blink.lib' } },
+            { 'saghen/blink.cmp',     dependencies = { 'saghen/blink.lib' } },
         },
         config = function()
             -- Brief aside: **What is LSP?**
@@ -438,7 +438,7 @@ require('lazy').setup({
         end,
     },
 
--- Useful plugin to show you pending keybinds.
+    -- Useful plugin to show you pending keybinds.
     { 'folke/which-key.nvim',          opts = {} },
     {
         -- Adds git related signs to the gutter, as well as utilities for managing changes
@@ -547,9 +547,17 @@ require('lazy').setup({
         lazy = vim.fn.argc(-1) == 0,
         build = ':TSUpdate',
         config = function()
-            require("nvim-treesitter").setup({
-                ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript',
-                    'vimdoc', 'vim', 'scala', 'hurl', 'http', 'json', 'dockerfile', 'terraform', 'html', 'css' },
+            require("nvim-treesitter").install({ 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript',
+                'typescript', 'vimdoc', 'vim', 'scala', 'hurl', 'http', 'json', 'dockerfile', 'terraform', 'html',
+                'css' })
+
+            -- The `main` branch does not auto-enable highlighting; start it per buffer
+            -- when a parser exists. Without this, filetypes lacking a built-in Vim
+            -- syntax file (e.g. http) render with no highlighting at all.
+            vim.api.nvim_create_autocmd('FileType', {
+                callback = function(ev)
+                    pcall(vim.treesitter.start, ev.buf)
+                end,
             })
         end,
     },
@@ -573,38 +581,61 @@ require('lazy').setup({
             local ts_move = require("nvim-treesitter-textobjects.move")
 
             for _, m in ipairs({
-                { { "x", "o" },         "aa", ts_select("@parameter.outer") },
-                { { "x", "o" },         "ia", ts_select("@parameter.inner") },
-                { { "x", "o" },         "af", ts_select("@function.outer") },
-                { { "x", "o" },         "if", ts_select("@function.inner") },
-                { { "x", "o" },         "ac", ts_select("@class.outer") },
-                { { "x", "o" },         "ic", ts_select("@class.inner") },
-                { { "n", "x", "o" },    "]m", function() ts_move.goto_next_start("@function.outer", "textobjects") end },
-                { { "n", "x", "o" },    "]]", function() ts_move.goto_next_start("@class.outer", "textobjects") end },
-                { { "n", "x", "o" },    "]M", function() ts_move.goto_next_end("@function.outer", "textobjects") end },
-                { { "n", "x", "o" },    "][", function() ts_move.goto_next_end("@class.outer", "textobjects") end },
-                { { "n", "x", "o" },    "[m", function() ts_move.goto_previous_start("@function.outer", "textobjects") end },
-                { { "n", "x", "o" },    "[[", function() ts_move.goto_previous_start("@class.outer", "textobjects") end },
-                { { "n", "x", "o" },    "[M", function() ts_move.goto_previous_end("@function.outer", "textobjects") end },
-                { { "n", "x", "o" },    "[]", function() ts_move.goto_previous_end("@class.outer", "textobjects") end },
+                { { "x", "o" },      "aa", ts_select("@parameter.outer") },
+                { { "x", "o" },      "ia", ts_select("@parameter.inner") },
+                { { "x", "o" },      "af", ts_select("@function.outer") },
+                { { "x", "o" },      "if", ts_select("@function.inner") },
+                { { "x", "o" },      "ac", ts_select("@class.outer") },
+                { { "x", "o" },      "ic", ts_select("@class.inner") },
+                { { "n", "x", "o" }, "]m", function() ts_move.goto_next_start("@function.outer", "textobjects") end },
+                { { "n", "x", "o" }, "]]", function() ts_move.goto_next_start("@class.outer", "textobjects") end },
+                { { "n", "x", "o" }, "]M", function() ts_move.goto_next_end("@function.outer", "textobjects") end },
+                { { "n", "x", "o" }, "][", function() ts_move.goto_next_end("@class.outer", "textobjects") end },
+                { { "n", "x", "o" }, "[m", function() ts_move.goto_previous_start("@function.outer", "textobjects") end },
+                { { "n", "x", "o" }, "[[", function() ts_move.goto_previous_start("@class.outer", "textobjects") end },
+                { { "n", "x", "o" }, "[M", function() ts_move.goto_previous_end("@function.outer", "textobjects") end },
+                { { "n", "x", "o" }, "[]", function() ts_move.goto_previous_end("@class.outer", "textobjects") end },
             }) do
                 vim.keymap.set(m[1], m[2], m[3])
             end
 
-            local files = vim.treesitter.query.get_files('rust', 'injections')
-            local parts = {}
-            for _, f in ipairs(files) do
-                local content = vim.fn.readfile(f)
-                local text = table.concat(content, '\n')
-                text = text:gsub('^;extends%s*\n?', '')
-                table.insert(parts, text)
+            local base_file = vim.treesitter.query.get_files('rust', 'injections')[1]
+            if base_file then
+                local lines = vim.fn.readfile(base_file)
+                local src = table.concat(lines, '\n')
+                local patched = src:gsub(
+                    '#not%-any%-of%? @_macro_name "slint" "html" "json" "xml"',
+                    '#not-any-of? @_macro_name "slint" "html" "json" "xml" "v"'
+                )
+                if patched ~= src then
+                    patched = patched .. '\n' .. [[
+(macro_invocation
+  macro: [
+    (scoped_identifier
+      name: (_) @_macro_name)
+    (identifier) @_macro_name
+  ]
+  (token_tree) @injection.content
+  (#any-of? @_macro_name "v")
+  (#offset! @injection.content 0 1 0 -1)
+  (#set! injection.language "html")
+  (#set! injection.include-children))
+]]
+                    vim.treesitter.query.set('rust', 'injections', patched)
+                    vim.api.nvim_create_autocmd('FileType', {
+                        pattern = 'rust',
+                        once = true,
+                        callback = function(ev)
+                            vim.defer_fn(function()
+                                if vim.api.nvim_buf_is_valid(ev.buf) then
+                                    vim.treesitter.stop(ev.buf)
+                                    vim.treesitter.start(ev.buf)
+                                end
+                            end, 100)
+                        end,
+                    })
+                end
             end
-            local src = table.concat(parts, '\n')
-            local patched = src:gsub(
-                '#not%-any%-of%? @_macro_name "slint" "html" "json"',
-                '#not-any-of? @_macro_name "slint" "html" "json" "v"'
-            )
-            vim.treesitter.query.set('rust', 'injections', patched)
         end,
     },
 
@@ -748,7 +779,8 @@ require('lazy').setup({
     -- http client, think postman but good
     {
         'mistweaverco/kulala.nvim',
-        opts = { show_icons = nil, default_view = "headers_body", winbar = true, default_winbar_panes = { "body", "headers", "headers_body", "script_output", "stats" }, },
+        -- commit = "21ce90e",
+        opts = { show_icons = nil, default_view = "headers_body", winbar = true, default_winbar_panes = { "body", "headers", "headers_body", "script_output", "stats" }, ui = {max_response_size = 3276800}},
         keys = {
             {
                 "<leader>hx",
@@ -1065,6 +1097,33 @@ require('lazy').setup({
         'mrcjkb/rustaceanvim',
         version = '^9', -- Recommended
         lazy = false,   -- This plugin is already lazy
+    },
+    {
+        "gruvw/strudel.nvim",
+        build = "npm ci",
+        config = function()
+            require("strudel").setup()
+        end,
+        keys = {
+            {
+                "<leader>sl",
+                function() require("strudel").launch() end,
+                mode = "n",
+                desc = "Strudel Launch",
+            },
+            {
+                "<leader>su",
+                function() require("strudel").update() end,
+                mode = "n",
+                desc = "Strudel Update",
+            },
+            {
+                "<leader>st",
+                function() require("strudel").toggle() end,
+                mode = "n",
+                desc = "Strudel Toggle",
+            },
+        },
     },
     -- {
     --     "rshtml/neovim",
