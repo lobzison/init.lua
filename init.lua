@@ -89,10 +89,10 @@ require("lazy").setup({
 
 	-- Git related plugins
 	{ "tpope/vim-fugitive", event = "VeryLazy" },
-	{ "tpope/vim-rhubarb", event = "VeryLazy" },
+	{ "tpope/vim-rhubarb",  event = "VeryLazy" },
 
 	-- Detect tabstop and shiftwidth automatically
-	{ "tpope/vim-sleuth", event = "VeryLazy" },
+	{ "tpope/vim-sleuth",   event = "VeryLazy" },
 
 	-- NOTE: This is where your plugins related to LSP can be installed.
 	--  The configuration is done below. Search for lspconfig to find it below.
@@ -110,10 +110,10 @@ require("lazy").setup({
 			"WhoIsSethDaniel/mason-tool-installer.nvim",
 
 			-- Useful status updates for LSP.
-			{ "j-hui/fidget.nvim", opts = {} },
+			{ "j-hui/fidget.nvim",    opts = {} },
 
 			-- Allows extra capabilities provided by blink.cmp
-			{ "saghen/blink.cmp", dependencies = { "saghen/blink.lib" } },
+			{ "saghen/blink.cmp",     dependencies = { "saghen/blink.lib" } },
 		},
 		config = function()
 			-- Brief aside: **What is LSP?**
@@ -155,7 +155,8 @@ require("lazy").setup({
 					-- for LSP related items. It sets the mode, buffer and description for us each time.
 					local map = function(keys, func, desc, mode)
 						mode = mode or "n"
-						vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
+						vim.keymap.set(mode, keys, func,
+							{ buffer = event.buf, desc = "LSP: " .. desc })
 					end
 
 					map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
@@ -163,9 +164,12 @@ require("lazy").setup({
 
 					map("gd", require("telescope.builtin").lsp_definitions, "[G]oto [D]efinition")
 					map("gr", require("telescope.builtin").lsp_references, "[G]oto [R]eferences")
-					map("gi", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
-					map("<leader>D", require("telescope.builtin").lsp_type_definitions, "Type [D]efinition")
-					map("<leader>ds", require("telescope.builtin").lsp_document_symbols, "[D]ocument [S]ymbols")
+					map("gi", require("telescope.builtin").lsp_implementations,
+						"[G]oto [I]mplementation")
+					map("<leader>D", require("telescope.builtin").lsp_type_definitions,
+						"Type [D]efinition")
+					map("<leader>ds", require("telescope.builtin").lsp_document_symbols,
+						"[D]ocument [S]ymbols")
 					map(
 						"<leader>ws",
 						require("telescope.builtin").lsp_dynamic_workspace_symbols,
@@ -179,7 +183,8 @@ require("lazy").setup({
 					-- Lesser used LSP functionality
 					map("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
 					map("<leader>wa", vim.lsp.buf.add_workspace_folder, "[W]orkspace [A]dd Folder")
-					map("<leader>wr", vim.lsp.buf.remove_workspace_folder, "[W]orkspace [R]emove Folder")
+					map("<leader>wr", vim.lsp.buf.remove_workspace_folder,
+						"[W]orkspace [R]emove Folder")
 					map("<leader>wl", function()
 						print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 					end, "[W]orkspace [L]ist Folders")
@@ -208,15 +213,16 @@ require("lazy").setup({
 					-- When you move your cursor, the highlights will be cleared (the second autocommand).
 					local client = vim.lsp.get_client_by_id(event.data.client_id)
 					if
-						client
-						and client_supports_method(
-							client,
-							vim.lsp.protocol.Methods.textDocument_documentHighlight,
-							event.buf
-						)
+					    client
+					    and client_supports_method(
+						    client,
+						    vim.lsp.protocol.Methods.textDocument_documentHighlight,
+						    event.buf
+					    )
 					then
 						local highlight_augroup =
-							vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
+						    vim.api.nvim_create_augroup("kickstart-lsp-highlight",
+							    { clear = false })
 						vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
 							buffer = event.buf,
 							group = highlight_augroup,
@@ -230,7 +236,8 @@ require("lazy").setup({
 						})
 
 						vim.api.nvim_create_autocmd("LspDetach", {
-							group = vim.api.nvim_create_augroup("kickstart-lsp-detach", { clear = true }),
+							group = vim.api.nvim_create_augroup("kickstart-lsp-detach",
+								{ clear = true }),
 							callback = function(event2)
 								vim.lsp.buf.clear_references()
 								vim.api.nvim_clear_autocmds({
@@ -246,11 +253,14 @@ require("lazy").setup({
 					--
 					-- This may be unwanted, since they displace some of your code
 					if
-						client
-						and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf)
+					    client
+					    and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf)
 					then
 						map("<leader>th", function()
-							vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
+							vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({
+								bufnr =
+								    event.buf
+							}))
 						end, "[T]oggle Inlay [H]ints")
 					end
 				end,
@@ -358,7 +368,8 @@ require("lazy").setup({
 						-- This handles overriding only values explicitly passed
 						-- by the server configuration above. Useful when disabling
 						-- certain features of an LSP (for example, turning off formatting for ts_ls)
-						server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
+						server.capabilities = vim.tbl_deep_extend("force", {}, capabilities,
+							server.capabilities or {})
 						require("lspconfig")[server_name].setup(server)
 					end,
 				},
@@ -373,7 +384,7 @@ require("lazy").setup({
 		event = { "InsertEnter", "CmdlineEnter" },
 		dependencies = {
 			-- Snippet Engine & its associated nvim-cmp source
-			{ "L3MON4D3/LuaSnip", event = "InsertEnter" },
+			{ "L3MON4D3/LuaSnip",         event = "InsertEnter" },
 			{ "saadparwaiz1/cmp_luasnip", event = "InsertEnter" },
 
 			-- Adds LSP completion capabilities
@@ -383,7 +394,7 @@ require("lazy").setup({
 			{ "rafamadriz/friendly-snippets", event = "InsertEnter" },
 
 			-- Completion for the cmdline
-			{ "hrsh7th/cmp-cmdline", event = "CmdlineEnter" },
+			{ "hrsh7th/cmp-cmdline",          event = "CmdlineEnter" },
 		},
 		-- [[ Configure nvim-cmp ]]
 		-- See `:help cmp`
@@ -454,7 +465,7 @@ require("lazy").setup({
 	},
 
 	-- Useful plugin to show you pending keybinds.
-	{ "folke/which-key.nvim", opts = {} },
+	{ "folke/which-key.nvim",          opts = {} },
 	{
 		-- Adds git related signs to the gutter, as well as utilities for managing changes
 		"lewis6991/gitsigns.nvim",
@@ -506,8 +517,33 @@ require("lazy").setup({
 		priority = 1000,
 		opts = {
 			transparent = false,
+			functionStyle = { bold = true },
+			colors = {
+				theme = {
+					ink = {
+						syn = {
+							-- functions: darker muted blue (palette.blue2); bold keeps them present.
+							fun = "#658594",
+							-- types: aqua -> muted warm tan, for warm/cool balance vs blue funcs
+							type = "#c4b28a",
+						},
+					},
+				},
+			},
+			overrides = function(colors)
+				return {
+					-- metals tags every val & parameter `readonly`, which kanso links
+					-- to Constant (orange) at priority 126 -- above the type-level
+					-- groups, so it wins. Neutralise it (no fg) so each token falls
+					-- through to its real type: vals -> fg, genuine constants -> orange.
+					["@lsp.mod.readonly"] = { fg = "none" },
+					-- function params: kanso's built-in orange, off the violet keywords
+					["@variable.parameter"] = { fg = colors.palette.orange },
+				}
+			end,
 		},
-		config = function()
+		config = function(_, opts)
+			require("kanso").setup(opts)
 			vim.cmd.colorscheme("kanso-ink")
 		end,
 	},
@@ -552,7 +588,7 @@ require("lazy").setup({
 	},
 
 	-- "gc" to comment visual regions/lines
-	{ "numToStr/Comment.nvim", opts = {} },
+	{ "numToStr/Comment.nvim",         opts = {} },
 
 	-- autoformat on save
 	-- fucks with autosave. Can only have one, so format will be done manually until the plugin allows to exclude formatiing from und
@@ -631,7 +667,8 @@ require("lazy").setup({
 
 			local ts_select = function(query)
 				return function()
-					require("nvim-treesitter-textobjects.select").select_textobject(query, "textobjects")
+					require("nvim-treesitter-textobjects.select").select_textobject(query,
+						"textobjects")
 				end
 			end
 			local ts_move = require("nvim-treesitter-textobjects.move")
@@ -713,8 +750,8 @@ require("lazy").setup({
 				)
 				if patched ~= src then
 					patched = patched
-						.. "\n"
-						.. [[
+					    .. "\n"
+					    .. [[
 (macro_invocation
   macro: [
     (scoped_identifier
@@ -1095,11 +1132,11 @@ require("lazy").setup({
 		},
 	},
 	{ "tpope/vim-surround", event = { "BufNewFile", "BufReadPost" } },
-	{ "tpope/vim-repeat", event = { "BufNewFile", "BufReadPost" } },
+	{ "tpope/vim-repeat",   event = { "BufNewFile", "BufReadPost" } },
 	{
 		"kristijanhusak/vim-dadbod-ui",
 		dependencies = {
-			{ "tpope/vim-dadbod", lazy = true },
+			{ "tpope/vim-dadbod",                     lazy = true },
 			{ "kristijanhusak/vim-dadbod-completion", ft = { "sql", "mysql", "plsql" }, lazy = true },
 		},
 		cmd = {
@@ -1156,40 +1193,40 @@ require("lazy").setup({
 		end,
 		ft = { "markdown" },
 	},
-	-- {
-	--     'scalameta/nvim-metals',
-	--     dependencies = {
-	--         'nvim-lua/plenary.nvim',
-	--         'mfussenegger/nvim-dap',
-	--     },
-	--     event = { "FileType scala", "FileType sbt", "FileType java" },
-	--     config = function()
-	--         -- metals
-	--
-	--         local metals_config = require("metals").bare_config()
-	--         metals_config.settings = {
-	--             showInferredType = true,
-	--             showImplicitArguments = false,
-	--             excludedPackages = { "akka.actor.typed.javadsl", "com.github.swagger.akka.javadsl" },
-	--             enableSemanticHighlighting = true,
-	--             startMcpServer = true,
-	--         }
-	--         metals_config.capabilities = require("cmp_nvim_lsp").default_capabilities()
-	--         metals_config.on_attach = on_attach
-	--         local nvim_metals_group = vim.api.nvim_create_augroup("nvim-metals", { clear = true })
-	--         metals_config.init_options.statusBarProvider = "on"
-	--         vim.api.nvim_create_autocmd("FileType", {
-	--             -- NOTE: You may or may not want java included here. You will need it if you
-	--             -- want basic Java support but it may also conflict if you are using
-	--             -- something like nvim-jdtls which also works on a java filetype autocmd.
-	--             pattern = { "scala", "sbt", "java" },
-	--             callback = function()
-	--                 require("metals").initialize_or_attach(metals_config)
-	--             end,
-	--             group = nvim_metals_group,
-	--         })
-	--     end
-	-- },
+	{
+		'scalameta/nvim-metals',
+		dependencies = {
+			'nvim-lua/plenary.nvim',
+			'mfussenegger/nvim-dap',
+		},
+		event = { "FileType scala", "FileType sbt", "FileType java" },
+		config = function()
+			-- metals
+
+			local metals_config = require("metals").bare_config()
+			metals_config.settings = {
+				showInferredType = true,
+				showImplicitArguments = false,
+				excludedPackages = { "akka.actor.typed.javadsl", "com.github.swagger.akka.javadsl" },
+				enableSemanticHighlighting = true,
+				startMcpServer = true,
+			}
+			metals_config.capabilities = require("cmp_nvim_lsp").default_capabilities()
+			metals_config.on_attach = on_attach
+			local nvim_metals_group = vim.api.nvim_create_augroup("nvim-metals", { clear = true })
+			metals_config.init_options.statusBarProvider = "on"
+			vim.api.nvim_create_autocmd("FileType", {
+				-- NOTE: You may or may not want java included here. You will need it if you
+				-- want basic Java support but it may also conflict if you are using
+				-- something like nvim-jdtls which also works on a java filetype autocmd.
+				pattern = { "scala", "sbt", "java" },
+				callback = function()
+					require("metals").initialize_or_attach(metals_config)
+				end,
+				group = nvim_metals_group,
+			})
+		end
+	},
 
 	{
 		"OXY2DEV/markview.nvim",
@@ -1470,7 +1507,7 @@ vim.o.scrolloff = 8
 
 -- folds setup
 vim.o.foldcolumn = "0" -- '0' is not bad
-vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
+vim.o.foldlevel = 99   -- Using ufo provider need a large value, feel free to decrease the value
 vim.o.foldlevelstart = 99
 vim.o.foldenable = true
 -- Keymaps for better default experience
