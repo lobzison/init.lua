@@ -1,0 +1,27 @@
+init.lua
+  s_5ae92ac540c8f2::t_834d5f48aac961 545-546
+  s_5ae92ac540c8f2::t_ff35274db310e4 520
+  s_5ae92ac540c8f2::t_88fad457af7b68 526
+  s_5ae92ac540c8f2::t_831c281cd38dc7 534,542-543
+  s_5ae92ac540c8f2::t_e7e61840b24243 527-528
+  s_5ae92ac540c8f2::t_6e7367afea6765 533,537-538,540-541
+  s_5ae92ac540c8f2::t_e767a9289b777f 521-524,529-532
+  s_5ae92ac540c8f2::t_b600dd4eb1777f 535-536,539
+  s_5ae92ac540c8f2::t_6c3e9fa9bcc590 525
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "255051ae6cd578b59cc2664baa230d041477444c",
+  "prompts": {},
+  "sessions": {
+    "s_5ae92ac540c8f2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "220474c4-defd-4b50-98cc-6810837a3858",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Gleb Lobov <lobzison@gmail.com>"
+    }
+  }
+}
