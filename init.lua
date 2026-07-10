@@ -1209,10 +1209,18 @@ require("lazy").setup({
 				showImplicitArguments = false,
 				excludedPackages = { "akka.actor.typed.javadsl", "com.github.swagger.akka.javadsl" },
 				enableSemanticHighlighting = true,
-				startMcpServer = true,
 			}
 			metals_config.capabilities = require("cmp_nvim_lsp").default_capabilities()
-			metals_config.on_attach = on_attach
+            metals_config.on_attach = function(client, bufnr)
+              local orig_notify = client.notify
+              client.notify = function(self, method, params)
+                if method == "textDocument/didSave" then return true end
+                return orig_notify(self, method, params)
+              end
+              on_attach(client, bufnr)  -- your existing on_attach
+              vim.keymap.set("n", "<leader>mc", require("metals").compile_cascade,
+                { buffer = bufnr, desc = "[m]etals [c]ompile cascade" })
+            end
 			local nvim_metals_group = vim.api.nvim_create_augroup("nvim-metals", { clear = true })
 			metals_config.init_options.statusBarProvider = "on"
 			vim.api.nvim_create_autocmd("FileType", {
