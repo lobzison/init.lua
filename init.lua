@@ -1220,6 +1220,8 @@ require("lazy").setup({
               on_attach(client, bufnr)  -- your existing on_attach
               vim.keymap.set("n", "<leader>mc", require("metals").compile_cascade,
                 { buffer = bufnr, desc = "[m]etals [c]ompile cascade" })
+              vim.keymap.set("n", "<leader>ma", require("metals").compile_cancel,
+                { buffer = bufnr, desc = "[m]etals [c]ompile cascade" })
             end
 			local nvim_metals_group = vim.api.nvim_create_augroup("nvim-metals", { clear = true })
 			metals_config.init_options.statusBarProvider = "on"
