@@ -1211,18 +1211,18 @@ require("lazy").setup({
 				enableSemanticHighlighting = true,
 			}
 			metals_config.capabilities = require("cmp_nvim_lsp").default_capabilities()
-            metals_config.on_attach = function(client, bufnr)
-              local orig_notify = client.notify
-              client.notify = function(self, method, params)
-                if method == "textDocument/didSave" then return true end
-                return orig_notify(self, method, params)
-              end
-              on_attach(client, bufnr)  -- your existing on_attach
-              vim.keymap.set("n", "<leader>mc", require("metals").compile_cascade,
-                { buffer = bufnr, desc = "[m]etals [c]ompile cascade" })
-              vim.keymap.set("n", "<leader>ma", require("metals").compile_cancel,
-                { buffer = bufnr, desc = "[m]etals [c]ompile cascade" })
-            end
+			metals_config.on_attach = function(client, bufnr)
+				local orig_notify = client.notify
+				client.notify = function(self, method, params)
+					if method == "textDocument/didSave" then return true end
+					return orig_notify(self, method, params)
+				end
+				on_attach(client, bufnr) -- your existing on_attach
+				vim.keymap.set("n", "<leader>mc", require("metals").compile_cascade,
+					{ buffer = bufnr, desc = "[m]etals [c]ompile cascade" })
+				vim.keymap.set("n", "<leader>ma", require("metals").compile_cancel,
+					{ buffer = bufnr, desc = "[m]etals [c]ompile cascade" })
+			end
 			local nvim_metals_group = vim.api.nvim_create_augroup("nvim-metals", { clear = true })
 			metals_config.init_options.statusBarProvider = "on"
 			vim.api.nvim_create_autocmd("FileType", {
@@ -1306,6 +1306,23 @@ require("lazy").setup({
 			},
 		},
 	},
+	{
+		"Marskey/telescope-sg",
+		dependencies = { "nvim-telescope/telescope.nvim" },
+		config = function()
+			require("telescope").setup({
+				extensions = {
+					ast_grep = {
+						command = { "ast-grep", "--json=stream" },
+						grep_open_files = false,
+						lang = nil,
+					},
+				},
+			})
+
+			require("telescope").load_extension("ast_grep")
+		end,
+	}
 	-- {
 	--     "rshtml/neovim",
 	--     name = "rshtml",
@@ -1571,6 +1588,7 @@ require("telescope").setup({
 -- Enable telescope fzf native, if installed
 pcall(require("telescope").load_extension, "fzf")
 
+
 -- require("neo-tree")
 -- See `:help telescope.builtin`
 vim.keymap.set("n", "<leader>?", require("telescope.builtin").oldfiles, { desc = "[?] Find recently opened files" })
@@ -1593,6 +1611,7 @@ vim.keymap.set("n", "<leader>sw", require("telescope.builtin").grep_string, { de
 vim.keymap.set("n", "<leader>sg", require("telescope.builtin").live_grep, { desc = "[S]earch by [G]rep" })
 vim.keymap.set("n", "<leader>sd", require("telescope.builtin").diagnostics, { desc = "[S]earch [D]iagnostics" })
 vim.keymap.set("n", "<leader>sr", require("telescope.builtin").resume, { desc = "[S]earch [R]esume" })
+vim.keymap.set("n", "<leader>sa", "<cmd>Telescope ast_grep<CR>", { desc = "[S]earch [A]ST" })
 
 --gitsigns hotkeys
 vim.keymap.set("n", "<leader>gh", require("gitsigns").preview_hunk, { buffer = bufnr, desc = "[g]it [h]unk" })
